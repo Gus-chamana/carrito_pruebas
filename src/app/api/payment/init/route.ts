@@ -11,6 +11,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Faltan datos requeridos" }, { status: 400 });
         }
 
+        if (typeof amount !== "number" || amount <= 0) {
+            return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+        }
+
+        if (currency !== "PEN" && currency !== "USD") {
+            return NextResponse.json({ error: "Moneda no soportada" }, { status: 400 });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return NextResponse.json({ error: "Email inválido" }, { status: 400 });
+        }
+
         // Llama al servicio de Izipay
         // NOTA: Si no tienes credenciales reales configuradas, esto fallará o necesitas mockearlo.
         // Para efectos de esta demo sin credenciales, devolveremos un mock si falla.
