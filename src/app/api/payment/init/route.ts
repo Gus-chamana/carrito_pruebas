@@ -24,31 +24,17 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Email inválido" }, { status: 400 });
         }
 
-        // Llama al servicio de Izipay
-        // NOTA: Si no tienes credenciales reales configuradas, esto fallará o necesitas mockearlo.
-        // Para efectos de esta demo sin credenciales, devolveremos un mock si falla.
-
-        try {
-            const result = await generateFormToken(amount, currency, orderId, email);
-            if (result.status === "SUCCESS") {
-                return NextResponse.json({ formToken: result.answer.formToken });
-            } else {
-                // Si falla (por ejemplo credenciales invalidas), retornamos un error o un mock para demo
-                console.warn("Izipay devolvió error (esperado sin credenciales):", result);
-                return NextResponse.json({
-                    warning: "Credenciales inválidas, usando simulacion",
-                    formToken: "DEMO-TOKEN-" + Math.random().toString(36).substring(7)
-                });
-            }
-        } catch (e) {
-            // Fallback para demo
-            return NextResponse.json({
-                warning: "Error de conexión, usando simulacion",
-                formToken: "DEMO-TOKEN-" + Math.random().toString(36).substring(7)
-            });
+        const result = await generateFormToken(amount, currency, orderId, email);
+        if (result.status === "SUCCESS") {
+            return NextResponse.json({ formToken: result.answer.formToken, orderId });
         }
 
+        return NextResponse.json(
+            { error: result.answer?.errorMessage || "No se pudo generar el formToken" },
+            { status: 502 }
+        );
     } catch (error) {
+        console.error("Error iniciando pago Izipay:", error);
         return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
     }
 }

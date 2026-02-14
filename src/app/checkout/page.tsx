@@ -3,15 +3,72 @@
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/layout/Header";
+import { IzipayPaymentForm } from "@/components/checkout/IzipayPaymentForm";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function CheckoutPage() {
     const { items, removeFromCart, total, clearCart } = useCart();
+    const [email, setEmail] = useState("");
+    const [formToken, setFormToken] = useState<string | null>(null);
+    const [orderId, setOrderId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const publicKey = process.env.NEXT_PUBLIC_IZIPAY_PUBLIC_KEY || "";
+    const successUrl = process.env.NEXT_PUBLIC_IZIPAY_SUCCESS_URL || "";
 
     const handlePayment = async () => {
-        alert("Redirigiendo a pasarela de pagos (Simulación)...");
-        // Aquí irá la integración con Izipay
+        if (!email) {
+            setError("Ingresa un correo para continuar.");
+            return;
+        }
+
+        if (!publicKey) {
+            setError("Falta configurar la clave publica de Izipay.");
+            return;
+        }
+
+        if (total <= 0) {
+            setError("El total debe ser mayor a cero.");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const generatedOrderId = `ORDER-${Date.now()}`;
+        setOrderId(generatedOrderId);
+
+        try {
+            const response = await fetch("/api/payment/init", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    amount: total,
+                    currency: "PEN",
+                    orderId: generatedOrderId,
+                    email,
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                setError(data?.error || "No se pudo iniciar el pago.");
+                setFormToken(null);
+                return;
+            }
+
+            setFormToken(data.formToken);
+        } catch (err) {
+            setError("No se pudo conectar con el servidor.");
+            setFormToken(null);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -77,9 +134,44 @@ export default function CheckoutPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <Button className="w-full" size="lg" onClick={handlePayment}>
-                                    Proceder al Pago
+                                <Button
+                                    className="w-full"
+                                    size="lg"
+                                    onClick={handlePayment}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? "Cargando..." : "Generar Pago"}
                                 </Button>
+                                <div className="mt-4 space-y-2">
+                                    <label className="text-sm text-gray-600" htmlFor="email">
+                                        Correo para el comprobante
+                                    </label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(event) => setEmail(event.target.value)}
+                                        placeholder="cliente@email.com"
+                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900"
+                                    />
+                                </div>
+                                {error && (
+                                    <p className="mt-3 text-sm text-red-600">{error}</p>
+                                )}
+                                {orderId && (
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        Orden: {orderId}
+                                    </p>
+                                )}
+                                {formToken && (
+                                    <div className="mt-6 rounded-md border border-gray-200 p-4">
+                                        <IzipayPaymentForm
+                                            formToken={formToken}
+                                            publicKey={publicKey}
+                                            successUrl={successUrl}
+                                        />
+                                    </div>
+                                )}
                                 <div className="mt-4 text-center">
                                     <Button variant="outline" size="sm" onClick={clearCart}>
                                         Vaciar Carrito
