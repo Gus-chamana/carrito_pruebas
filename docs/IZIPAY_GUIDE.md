@@ -18,6 +18,8 @@ IZIPAY_SHOP_ID=87654321
 IZIPAY_TEST_KEY=t_4eC...
 IZIPAY_PROD_KEY=p_7aB...
 IZIPAY_MODE=TEST
+NEXT_PUBLIC_IZIPAY_PUBLIC_KEY=12345678:PUBLIC-TEST-KEY
+NEXT_PUBLIC_IZIPAY_SUCCESS_URL=https://tu-dominio.com/checkout/success
 ```
 
 ## 3. Flujo de Pago (Cómo funciona el código)
@@ -45,16 +47,16 @@ Hemos creado una ruta de API que:
 4.  Anula la transacción desde el Back Office si deseas reembolsar el dinero.
 
 ## Implementación Frontend (Siguientes Pasos)
-Para completar la integración, debes agregar el script de Izipay en tu `layout.tsx` o cargarlo dinámicamente en el checkout.
+Para completar la integración, se cargan los scripts de Izipay de forma dinámica en el checkout.
 
 En el `HEAD` de tu documento document (o `layout.tsx`), agrega:
 ```html
 <script 
   src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
   kr-public-key="TU_CLAVE_PUBLICA_DE_TEST_AQUI"
-  kr-post-url-success="/checkout/success"
+  kr-post-url-success="https://tu-dominio.com/checkout/success"
 ></script>
 <link rel="stylesheet" href="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic-reset.css">
 <script src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic.js"></script>
 ```
-*Nota: Reemplaza `TU_CLAVE_PUBLICA...` con la clave pública de tu Back Office.*
+*Nota: Reemplaza `TU_CLAVE_PUBLICA...` con la clave pública de tu Back Office y usa tu dominio real en `NEXT_PUBLIC_IZIPAY_SUCCESS_URL`.*
