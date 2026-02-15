@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { CartProvider } from "@/context/CartContext";
+import { Footer } from "@/components/layout/Footer";
 
 export default function RootLayout({
   children,
@@ -27,10 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        
+
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <CartProvider>{children}</CartProvider>
+        <Footer />
       </body>
     </html>
   );
